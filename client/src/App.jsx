@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const API = "http://localhost:3000/api/assets";
+const API = `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/assets`;
 
 function App() {
   const [assets, setAssets] = useState([]);
