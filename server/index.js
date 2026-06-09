@@ -31,6 +31,16 @@ app.get("/api/assets", async (req, res) => {
   }
 });
 
+app.get("/api/assets/tag/:assetTag", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM assets WHERE asset_tag = $1", [req.params.assetTag]);
+    if (result.rows.length === 0) return res.status(404).json({ error: "Not found" });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get("/api/assets/:id", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM assets WHERE id = $1", [req.params.id]);
