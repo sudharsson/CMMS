@@ -75,6 +75,66 @@ app.delete("/api/assets/:id", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// ===== WORK ORDERS =====
 
+// READ all (joined with asset name so the UI can show which asset)
+app.get("/api/work-orders", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT wo.*, a.name AS asset_name, a.asset_tag
+      FROM work_orders wo
+      LEFT JOIN assets a ON wo.asset_id = a.id
+      ORDER BY wo.id DESC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// CREATE
+app.post("/api/work-orders", async (req, res) => {
+  try {
+    const { asset_id, title, description, priority, status, assigned_to, due_date } = req.body;
+    const result = await pool.query(
+      `INSERT INTO work_orders (asset_id, title, description, priority, status, assigned_to, due_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [asset_id || null, title, description || null, priority || "medium", status || "open", assigned_to || null, due_date || null]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// UPDATE
+app.put("/api/work-orders/:id", async (req, res) => {
+  try {
+    const { asset_id, title, description, priority, status, assigned_to, due_date } = req.body;
+    // if status is being set to done, stamp completed_at
+    const completed_at = status === "done" ? new Date() : null;
+    const result = await pool.query(
+      `UPDATE work_orders
+       SET asset_id=$1, title=$2, description=$3, priority=$4, status=$5, assigned_to=$6, due_date=$7, completed_at=$8
+       WHERE id=$9 RETURNING *`,
+      [asset_id || null, title, description || null, priority, status, assigned_to || null, due_date || null, completed_at, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: "Not found" });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE
+app.delete("/api/work-orders/:id", async (req, res) => {
+  try {
+    const result = await pool.query("DELETE FROM work_orders WHERE id = $1 RETURNING *", [req.params.id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: "Not found" });
+    res.json({ deleted: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 const PORT =  process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Running on http://localhost:${PORT}`));

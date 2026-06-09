@@ -41,7 +41,7 @@ function AssetList() {
   return (
     <div style={{ maxWidth: 1100, margin: "40px auto", fontFamily: "sans-serif" }}>
       <h1>CMMS — Asset Register</h1>
-
+        <p><Link to="/work-orders">→ Work Orders</Link></p>
       <h2>Add Asset</h2>
       <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
         <input name="asset_tag" placeholder="Asset Tag" value={form.asset_tag} onChange={handleChange} />
